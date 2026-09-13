@@ -36,7 +36,7 @@ class YtdlpHandler:
             "outtmpl": f"{self.yt_id}.m4a",
             "progress_hooks": [self.yt_dlp_monitor],
             "extractor_args": {
-                "youtube": "player_client=web_creator",
+                "youtube": "player_client=android_vr",
             },
             "cookiefile": self.cookie_path,
             "verbose": False,
