@@ -1,4 +1,5 @@
 import os
+
 import yt_dlp
 
 from Logger import Logger
@@ -63,28 +64,30 @@ class YtdlpHandler:
             title = output.get("title")
             duration = output.get("duration")
 
-            if shouldDownload and not YtdlpHandler.destination:
-                expected_path = f"/audio/{self.yt_id}.m4a"
-
-                if os.path.exists(expected_path):
-                    YtdlpHandler.destination = expected_path
-                else:
-                    raise RuntimeError(
-                        f"yt-dlp completed but output file was not found: {expected_path}"
-                    )
-
             if shouldDownload:
+                if not YtdlpHandler.destination:
+                    expected_path = f"/audio/{self.yt_id}.m4a"
+
+                    if os.path.exists(expected_path):
+                        YtdlpHandler.destination = expected_path
+                    else:
+                        raise RuntimeError(
+                            f"yt-dlp completed but output file was not found: "
+                            f"{expected_path}"
+                        )
+
                 Logger.log(
-                    f"yt_dlp_request complete, destination -> {YtdlpHandler.destination}",
+                    f"yt_dlp_request complete, destination -> "
+                    f"{YtdlpHandler.destination}",
                     PID,
                     self.yt_id,
                 )
 
-                return {
-                    "title": title,
-                    "duration": duration,
-                    "destfilepath": YtdlpHandler.destination,
-                }
+            return {
+                "title": title,
+                "duration": duration,
+                "destfilepath": YtdlpHandler.destination,
+            }
 
         except Exception as e:
             Logger.log(
