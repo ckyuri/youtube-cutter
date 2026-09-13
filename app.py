@@ -1,25 +1,45 @@
-from flask import Flask, render_template
-from flask_s3 import FlaskS3
-from flask_restful import Api
-from flask_jwt_extended import JWTManager
 import os
-import boto3
+from flask import Flask, send_from_directory, abort
+from flask_restful import Api
+from flask_cors import CORS
+from flask_jwt_extended import JWTManager
 
-# env variable for local or deployment build
-os.environ["IS_DEPLOYMENT"] = "FALSE"
+from FullDownloadHandler import FullDownloadHandler
+from CleanupHandler import CleanupHandler
+from WebhookHandler import WebHookHandler
 
-if os.environ["IS_DEPLOYMENT"] == "FALSE": 
-    from flask_cors import CORS
+app = Flask(__name__)
 
-app = Flask(__name__, template_folder='frontend/dist', static_folder='frontend/dist/assets')
+# Origin of your deployed frontend, e.g. https://7a7vm7kqewd7iojnfnnun8h0.kyuri.moe
+FRONTEND_ORIGIN = os.getenv("FRONTEND_ORIGIN", "*")
+CORS(app, origins=[FRONTEND_ORIGIN], supports_credentials=True)
 
-if os.environ["IS_DEPLOYMENT"] == "FALSE": 
-    CORS(app, supports_credentials=True)
+# JWT secret now comes from an env var instead of AWS SSM (which required the
+# original developer's own AWS account). Set JWT_SECRET_KEY in your deployment.
+app.config["JWT_SECRET_KEY"] = os.environ["JWT_SECRET_KEY"]
 
-app.config['FLASKS3_BUCKET_NAME'] = 'youtube-cutter-static-files-dev'
-s3 = FlaskS3(app)
+jwt = JWTManager(app)
+
 api = Api(app)
+api.add_resource(FullDownloadHandler, "/handle_yt")
+api.add_resource(CleanupHandler, "/cleanup")
+api.add_resource(WebHookHandler, "/webhook")
 
-@app.route('/')
-def serve():
-    return render_template('index.html')
+AUDIO_PATH = "/audio"
+
+
+@app.route("/audio/<path:filename>")
+def serve_audio(filename):
+    """
+    Replaces the nginx /audio/ location block: serves processed audio files
+    as downloadable attachments. HOST_ENDPOINT (used by FullDownloadHandler
+    to build the returned download URL) should point at this same app.
+    """
+    if not os.path.exists(os.path.join(AUDIO_PATH, filename)):
+        abort(404)
+    return send_from_directory(
+        AUDIO_PATH,
+        filename,
+        as_attachment=True,
+        mimetype="application/octet-stream",
+    )
