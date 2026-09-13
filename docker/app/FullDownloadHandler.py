@@ -121,7 +121,15 @@ class FullDownloadHandler(Resource):
     yt_info = yt_object.yt_dlp_request(False)
 
     # video length limit removed
-    duration_minutes = yt_info["duration"] / 60
+    duration = yt_info.get("duration")
+
+    if duration is None:
+        return jsonify({
+            "error": "true",
+            "message": "Could not determine video duration"
+        }), 500
+
+    duration_minutes = duration / 60
     Logger.log(f"duration in minutes -> {duration_minutes}", PID, YT_ID)
 
     yt_title = sanitize(yt_info["title"])
