@@ -24,11 +24,9 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
-# Bring in the built frontend and place it where Flask's default
-# template_folder='templates' / static_folder='static' expect it.
-# Adjust these paths if local_deploy.sh copies things differently.
-COPY --from=frontend-build /frontend/dist/index.html ./templates/index.html
-COPY --from=frontend-build /frontend/dist/assets ./static/assets
+# app.py sets template_folder='frontend/dist', static_folder='frontend/dist/assets'
+# so the built frontend needs to live at that exact path relative to app.py.
+COPY --from=frontend-build /frontend/dist ./frontend/dist
 
 EXPOSE 3000
 
