@@ -1,4 +1,3 @@
-from botocore.parsers import LOG
 import yt_dlp
 import os
 from Logger import Logger
