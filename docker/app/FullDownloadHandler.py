@@ -143,6 +143,7 @@ class FullDownloadHandler(Resource):
     except Exception as e:
       Logger.log(f"Error occurred while converting to {converted_file}: {e}", PID, YT_ID)
 
+    if dst_filepath and os.path.exists(dst_filepath):
     os.remove(dst_filepath)
 
     output_file_name = f"{yt_title}.wav"
