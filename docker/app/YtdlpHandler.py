@@ -28,7 +28,7 @@ class YtdlpHandler:
         YtdlpHandler.destination = None
 
         yt_dlp_opts = {
-            "format": "m4a/bestaudio/best",
+            "format": "bestaudio/best",
             "quiet": True,
             "paths": {
                 "home": "/audio/",
@@ -36,7 +36,7 @@ class YtdlpHandler:
             "outtmpl": f"{self.yt_id}.m4a",
             "progress_hooks": [self.yt_dlp_monitor],
             "extractor_args": {
-                "youtube": "player_client=android_vr",
+                "youtube": "player_client=web_embedded,android_vr",
             },
             "cookiefile": self.cookie_path,
             "verbose": False,
