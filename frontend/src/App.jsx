@@ -22,8 +22,9 @@ import {
 
 function App() {
     const developMode = false;     // Set to true to skip the youtube url input and go straight to cutter ui with a local audio file
-    // const backendUrl = "http://127.0.0.1";
-    const backendUrl = "https://wav-helper.com";
+    // Same-origin deployment: frontend and backend are one app now, so this
+    // can just be an empty string (relative URLs like "/handle_yt" resolve fine).
+    const backendUrl = "";
 
     const { showAlert } = useAlert();
 
