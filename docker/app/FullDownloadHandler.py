@@ -26,7 +26,7 @@ AUDIO_PATH="/audio"
 
 APP_ENV = os.getenv("APP_ENV")
 
-FFMPEG_EXEC = "/opt/bin/ffmpeg"
+FFMPEG_EXEC = "ffmpeg"  # installed via apt in the Dockerfile, already on PATH
 
 def sanitize(title: str):
     title = re.sub(r'[^\x00-\x7f]',r'', title)
@@ -70,7 +70,7 @@ def processMetrics(title, is_mp3, is_cut):
     with open(LOCAL_METRICS_PATH, 'a') as file:
       clean_yt_title = title.replace("\n","")
       file.write(f'[{download_type}]-[{extension}]-[{curr_time.strftime("%d-%H:%M")}]-{clean_yt_title}\n')
-  except ClientError as e:
+  except Exception as e:
     if e.response['Error']['Code'] == "404":
       # The key does not exist
       Logger.log(f"metric file not found, creating new one", PID, YT_ID)
@@ -124,11 +124,9 @@ class FullDownloadHandler(Resource):
 
     yt_info = yt_object.yt_dlp_request(False)
 
-    # set a limit on video length
+    # video length limit removed
     duration_minutes = yt_info["duration"] / 60
     Logger.log(f"duration in minutes -> {duration_minutes}", PID, YT_ID)
-    if duration_minutes > DOWNLOAD_LIMIT:
-      return {"error": "true", "message": f"This video is over the limit of {DOWNLOAD_LIMIT} minutes!"}
 
     yt_title = sanitize(yt_info["title"])
 
