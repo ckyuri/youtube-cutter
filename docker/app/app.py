@@ -1,31 +1,38 @@
-from flask import Flask
+import os
+from flask import Flask, send_from_directory, abort, render_template
 from flask_restful import Api
-# from flask_cors import CORS
+
 from FullDownloadHandler import FullDownloadHandler
 from CleanupHandler import CleanupHandler
-from flask_jwt_extended import JWTManager
-import boto3
-
 from WebhookHandler import WebHookHandler
 
-app = Flask(__name__)
-# CORS(app, origins=["http://127.0.0.1:5000", "https://wav.ninja", "https://youtube-cutter-dev-1942500617.us-east-1.elb.amazonaws.com"])
-
-ssm_client = boto3.client("ssm")
-
-param_output = ssm_client.get_parameter(
-    Name="youtube-cutter-premium-jwt-key",
-    WithDecryption=True
+app = Flask(
+    __name__,
+    template_folder="frontend/dist",
+    static_folder="frontend/dist/assets",
 )
-
-jwt_secret_key = param_output["Parameter"]["Value"]
-app.config["JWT_SECRET_KEY"] = jwt_secret_key
-
-jwt = JWTManager(app)
 
 api = Api(app)
 api.add_resource(FullDownloadHandler, "/handle_yt")
 api.add_resource(CleanupHandler, "/cleanup")
-
-# TEMP
 api.add_resource(WebHookHandler, "/webhook")
+
+AUDIO_PATH = "/audio"
+
+
+@app.route("/")
+def serve():
+    return render_template("index.html")
+
+
+@app.route("/audio/<path:filename>")
+def serve_audio(filename):
+    """Serves processed audio files as downloadable attachments."""
+    if not os.path.exists(os.path.join(AUDIO_PATH, filename)):
+        abort(404)
+    return send_from_directory(
+        AUDIO_PATH,
+        filename,
+        as_attachment=True,
+        mimetype="application/octet-stream",
+    )
