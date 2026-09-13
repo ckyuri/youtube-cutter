@@ -10,17 +10,13 @@ import re
 import time
 from Logger import Logger
 
-# Import for JWT
-from flask_jwt_extended import verify_jwt_in_request
-
 PID = os.getpid()
 YT_ID = None
 
 LOCAL_METRICS_PATH = f"/var/log/metrics/metrics_{PID}.log"   # set in docker-compose.yml
 
-HOST_ENDPOINT = os.getenv("HOST_ENDPOINT") 
+# HOST_ENDPOINT removed: frontend and backend are now the same app/origin,
 
-DOWNLOAD_LIMIT = 180  # In minutes
 
 AUDIO_PATH="/audio"
 
@@ -160,7 +156,7 @@ class FullDownloadHandler(Resource):
 
     processMetrics(yt_title, download_mp3, is_cut)
 
-    location = f"{HOST_ENDPOINT}/audio/{output_file_name}"
+    location = f"/audio/{output_file_name}"  # relative: same-origin now
 
     Logger.log(f"========== FINISHING FullDownloadHandler.py, took {(time.time() - start_time)} seconds ==========", PID, YT_ID)
     return jsonify({"error": "false", "url": location, "title": yt_title})
