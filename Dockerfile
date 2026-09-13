@@ -30,6 +30,6 @@ COPY . .
 COPY --from=frontend-build /frontend/dist/index.html ./templates/index.html
 COPY --from=frontend-build /frontend/dist/assets ./static/assets
 
-EXPOSE 8000
+EXPOSE 3000
 
-CMD ["gunicorn", "--bind", "0.0.0.0:8000", "app:app"]
+CMD ["gunicorn", "--bind", "0.0.0.0:3000", "app:app"]
