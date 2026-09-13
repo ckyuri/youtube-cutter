@@ -2,31 +2,40 @@
 FROM node:20-slim AS frontend-build
 
 WORKDIR /frontend
+
 COPY frontend/package*.json ./
 RUN npm install
+
 COPY frontend/ ./
 RUN npm run build
-# Assumes Vite's default output directory: frontend/dist
+
 
 # ---- Stage 2: Python backend ----
 FROM python:3.13-slim AS backend
 
-# ffmpeg is required by the app; the repo's bundled macOS binary won't run on Linux,
-# so install a Linux-native ffmpeg via apt instead.
+# ffmpeg is required by the backend
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ffmpeg \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
+# Python dependencies
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY . .
+# Copy the main/root Flask application
+COPY app.py .
 
-# app.py sets template_folder='frontend/dist', static_folder='frontend/dist/assets'
-# so the built frontend needs to live at that exact path relative to app.py.
+# The actual backend handler modules live here.
+# Copy them into /app because app.py imports them as top-level modules.
+COPY docker/app/*.py .
+
+# Build frontend
 COPY --from=frontend-build /frontend/dist ./frontend/dist
+
+# Runtime directories used by the application
+RUN mkdir -p /audio /var/log/metrics
 
 EXPOSE 3000
 
